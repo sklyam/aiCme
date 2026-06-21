@@ -15,13 +15,13 @@ The chatbot has **strict topic scope**: only answers questions about **About Me,
 ## Tech Stack
 
 | Layer | Choice |
-|---|---|
+|---|---|---|
 | Framework | **TanStack Start** (React, file-based routing, SSR) |
 | Styling | **Tailwind CSS v4** |
-| AI SDK | **Vercel AI SDK** (unified multi-provider) |
-| LLM Providers | OpenAI / Anthropic / Ollama (configurable) |
+| AI SDK | **TanStack AI** (`@tanstack/ai`) — multi-provider: OpenAI, Anthropic, Gemini, Ollama |
 | Language | **TypeScript** |
-| Markdown | **gray-matter** (frontmatter parsing) + **react-markdown** (rendering) |
+| Markdown | **gray-matter** (frontmatter parsing) |
+| Package Manager | **pnpm** |
 | Deployment | Vercel (serverless) → future Docker |
 
 ---
@@ -37,35 +37,32 @@ The chatbot has **strict topic scope**: only answers questions about **About Me,
 
 ```
 aiCme/
-├── app/
+├── src/
 │   ├── routes/
-│   │   ├── __root.tsx             # Root layout (nav, theme)
-│   │   ├── index.tsx              # Resume page
-│   │   └── chatbot.tsx            # Chatbot page
+│   │   ├── __root.tsx             # Root layout (nav, theme provider)
+│   │   ├── index.tsx              # Resume page (loader: enhanceResume)
+│   │   ├── chatbot.tsx            # Chatbot page (loader: fetchProfileName)
+│   │   └── api.chat.ts            # API route POST /api/chat (SSE streaming)
 │   ├── components/
 │   │   ├── resume/
-│   │   │   ├── Resume.tsx
-│   │   │   ├── ResumeHeader.tsx
-│   │   │   ├── ExperienceSection.tsx
-│   │   │   ├── EducationSection.tsx
-│   │   │   ├── ProjectsSection.tsx
-│   │   │   └── SkillsSection.tsx
-│   │   ├── Chatbot.tsx
-│   │   ├── ThemeToggle.tsx
-│   │   └── ThemeProvider.tsx
+│   │   │   ├── Resume.tsx         # Main resume shell
+│   │   │   ├── ResumeHeader.tsx   # Name, title, contact bar
+│   │   │   ├── BioSection.tsx     # About section
+│   │   │   └── SectionsList.tsx   # Generic sections renderer
+│   │   ├── Chatbot.tsx            # Chat messages + input + streaming
+│   │   ├── ThemeToggle.tsx        # Dark/light toggle
+│   │   └── ThemeProvider.tsx      # CSS variable theme context
 │   ├── server/
 │   │   ├── llm.ts                 # Multi-provider LLM client
 │   │   ├── prompts.ts             # Prompt templates (scope constraints)
 │   │   ├── enhance-resume.ts      # Server fn: LLM-enhanced resume
-│   │   └── chat.ts                # Server fn: chatbot streaming
+│   │   └── content-api.ts         # Server fns: fetchProfileName, fetchAllContent
 │   ├── lib/
-│   │   ├── content.ts             # Read & parse markdown files
-│   │   ├── config.ts              # App configuration
-│   │   └── cache.ts               # Resume enhancement cache
-│   ├── client.tsx
+│   │   ├── content.ts             # Read & parse markdown files (server-only)
+│   │   └── config.ts              # App configuration
 │   ├── router.tsx
-│   ├── routeTree.gen.ts
-│   └── ssr.tsx
+│   ├── routeTree.gen.ts           # Auto-generated
+│   └── styles.css                 # Tailwind + CSS custom properties theme
 ├── content/
 │   ├── profile.md                 # Bio, contact (frontmatter-driven)
 │   ├── experience.md
@@ -74,10 +71,11 @@ aiCme/
 │   ├── skills.md
 │   └── prompt.md                  # Optional: custom chatbot system prompt
 ├── public/
-├── app.config.ts
-├── tailwind.config.ts
+├── vite.config.ts
 ├── tsconfig.json
-└── package.json
+├── tsr.config.json
+├── package.json
+└── pnpm-lock.yaml
 ```
 
 ---
