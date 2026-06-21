@@ -3,22 +3,21 @@ import { openaiText } from '@tanstack/ai-openai'
 import { anthropicText } from '@tanstack/ai-anthropic'
 import { geminiText } from '@tanstack/ai-gemini'
 import { ollamaText } from '@tanstack/ai-ollama'
-import type { TextAdapter, TextStreamResult } from '@tanstack/ai/adapters'
 import { config } from '../lib/config'
 
 type Provider = 'openai' | 'anthropic' | 'gemini' | 'ollama'
 
-function getAdapter(provider?: Provider): TextAdapter {
+function getAdapter(provider?: Provider) {
   const p = provider ?? config.provider
   switch (p) {
     case 'openai':
-      return openaiText(config.model.openai)
+      return openaiText(config.model.openai as Parameters<typeof openaiText>[0])
     case 'anthropic':
-      return anthropicText(config.model.anthropic)
+      return anthropicText(config.model.anthropic as Parameters<typeof anthropicText>[0])
     case 'gemini':
-      return geminiText(config.model.gemini)
+      return geminiText(config.model.gemini as Parameters<typeof geminiText>[0])
     case 'ollama':
-      return ollamaText(config.model.ollama)
+      return ollamaText(config.model.ollama as Parameters<typeof ollamaText>[0])
   }
 }
 
@@ -30,7 +29,7 @@ export function createChatStream({
   messages: Array<{ role: string; content: string }>
   systemPrompt?: string
   provider?: Provider
-}): TextStreamResult {
+}) {
   const adapter = getAdapter(provider)
   const systemPrompts = systemPrompt ? [systemPrompt] : []
 
@@ -48,10 +47,9 @@ export function createEnhancementStream({
 }: {
   systemPrompt: string
   userPrompt: string
-}): TextStreamResult {
+}) {
   return createChatStream({
     messages: [{ role: 'user', content: userPrompt }],
     systemPrompt,
-    provider: 'openai',
   })
 }

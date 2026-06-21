@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { getProfileName, getAllContentAsString, getProfile } from '../lib/content'
+import { getProfileName, getAllContentAsString } from '../lib/content'
 
 export const fetchProfileName = createServerFn({ method: 'GET' }).handler(
   async () => {
@@ -12,7 +12,3 @@ export const fetchAllContent = createServerFn({ method: 'GET' }).handler(
     return getAllContentAsString()
   },
 )
-
-export const fetchProfile = createServerFn({ method: 'GET' }).handler(async () => {
-  return getProfile() ?? null
-})

@@ -6,12 +6,11 @@ import {
   RESUME_ENHANCEMENT_USER_PROMPT,
 } from './prompts'
 
-async function collectStreamToString(
-  streamResult: Awaited<ReturnType<typeof createEnhancementStream>>,
-): Promise<string> {
+async function collectStreamToString(streamResult: unknown): Promise<string> {
   let result = ''
-  for await (const chunk of streamResult) {
-    if (chunk.type === 'TEXT_MESSAGE_CONTENT') {
+  const iterable = streamResult as AsyncIterable<{ type: string; delta?: string }>
+  for await (const chunk of iterable) {
+    if (chunk.type === 'TEXT_MESSAGE_CONTENT' && chunk.delta) {
       result += chunk.delta
     }
   }
