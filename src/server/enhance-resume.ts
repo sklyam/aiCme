@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getAllContentAsString, getProfile } from '../lib/content'
+import { getCachedResume, writeCache } from '../lib/cache'
 import { createEnhancementStream } from './llm'
 import {
   RESUME_ENHANCEMENT_SYSTEM_PROMPT,
@@ -64,28 +65,42 @@ async function fallbackResume(): Promise<EnhancedResume> {
   }
 }
 
+async function generateResume(content: string): Promise<EnhancedResume | null> {
+  try {
+    const stream = createEnhancementStream({
+      systemPrompt: RESUME_ENHANCEMENT_SYSTEM_PROMPT,
+      userPrompt: RESUME_ENHANCEMENT_USER_PROMPT + content,
+    })
+
+    const raw = await collectStreamToString(stream)
+    const jsonMatch = raw.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]) as EnhancedResume
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 export const enhanceResume = createServerFn({ method: 'GET' }).handler(
   async (): Promise<EnhancedResume> => {
-    try {
-      const content = getAllContentAsString()
-      if (!content) {
-        return fallbackResume()
-      }
+    const cached = getCachedResume()
+    if (cached) {
+      return cached
+    }
 
-      const stream = createEnhancementStream({
-        systemPrompt: RESUME_ENHANCEMENT_SYSTEM_PROMPT,
-        userPrompt: RESUME_ENHANCEMENT_USER_PROMPT + content,
-      })
-
-      const raw = await collectStreamToString(stream)
-      const jsonMatch = raw.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]) as EnhancedResume
-      }
-
-      return fallbackResume()
-    } catch {
+    const content = getAllContentAsString()
+    if (!content) {
       return fallbackResume()
     }
+
+    const generated = await generateResume(content)
+    if (generated) {
+      writeCache(generated)
+      return generated
+    }
+
+    return fallbackResume()
   },
 )
