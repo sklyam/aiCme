@@ -28,9 +28,11 @@ export function SectionsList({
               <div key={i}>
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h3 className="font-semibold text-[var(--color-text)]">
-                      {item.title}
-                    </h3>
+                    {item.title !== section.title && (
+                      <h3 className="font-semibold text-[var(--color-text)]">
+                        {item.title}
+                      </h3>
+                    )}
                     {item.subtitle && (
                       <p className="text-sm text-[var(--color-primary)]">
                         {item.subtitle}
