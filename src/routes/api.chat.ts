@@ -1,52 +1,69 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { toServerSentEventsResponse } from '@tanstack/ai'
-import type { StreamChunk } from '@tanstack/ai'
+import { EventType, toServerSentEventsResponse, type StreamChunk } from '@tanstack/ai'
 import { createChatStream } from '../server/llm'
 import { buildChatSystemPrompt } from '../server/prompts'
-import { getProfileName, isQuestionInScope } from '../lib/content'
 
-function makeStream(text: string): AsyncGenerator<StreamChunk> {
-  const id = crypto.randomUUID()
-  return (async function* () {
-    yield { type: 'run_started', threadId: id, runId: id } as StreamChunk
-    yield { type: 'text_message_start', messageId: id } as StreamChunk
-    yield { type: 'text_message_content', messageId: id, delta: text } as StreamChunk
-    yield { type: 'text_message_end', messageId: id } as StreamChunk
-    yield { type: 'run_finished', threadId: id, runId: id } as StreamChunk
-  })()
+async function* staticChatStream(text: string): AsyncIterable<StreamChunk> {
+  const runId = crypto.randomUUID()
+  const msgId = crypto.randomUUID()
+
+  yield { type: EventType.RUN_STARTED, threadId: runId, runId, timestamp: Date.now() }
+  yield { type: EventType.TEXT_MESSAGE_START, messageId: msgId, role: 'assistant', timestamp: Date.now() }
+  yield { type: EventType.TEXT_MESSAGE_CONTENT, messageId: msgId, delta: text, timestamp: Date.now() }
+  yield { type: EventType.TEXT_MESSAGE_END, messageId: msgId, timestamp: Date.now() }
+  yield {
+    type: EventType.RUN_FINISHED,
+    threadId: runId,
+    runId,
+    finishReason: 'stop',
+    timestamp: Date.now(),
+  }
+}
+
+function convertMessages(msgs: unknown[]): Array<{ role: 'user' | 'assistant'; content: string }> {
+  return msgs.flatMap((msg: any) => {
+    const role = msg.role === 'user' ? 'user' : 'assistant'
+    if (msg.parts) {
+      const text = msg.parts
+        .filter((p: any) => p.type === 'text')
+        .map((p: any) => p.content)
+        .join('')
+      return text.trim() ? [{ role, content: text }] : []
+    }
+    const content = typeof msg.content === 'string' ? msg.content : ''
+    return content.trim() ? [{ role, content }] : []
+  })
 }
 
 export const Route = createFileRoute('/api/chat')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        try {
-          const body = await request.json()
-          const { messages } = body
-          const lastMessage = messages[messages.length - 1]?.content ?? ''
-          const name = getProfileName()
+        const abortController = new AbortController()
 
-          if (!isQuestionInScope(lastMessage)) {
-            return toServerSentEventsResponse(
-              makeStream(`I can only answer questions about ${name}'s profile.`),
-            )
+        try {
+          const body = await request.json().catch(() => ({} as Record<string, unknown>))
+          const modelMessages = convertMessages((body as any).messages ?? [])
+
+          if (modelMessages.length === 0 || !modelMessages[modelMessages.length - 1]?.content?.trim()) {
+            return toServerSentEventsResponse(staticChatStream('Please ask a question about my profile.'), {
+              abortController,
+            })
           }
 
-          const abortController = new AbortController()
           const systemPrompt = buildChatSystemPrompt()
-          const stream = createChatStream({
-            messages,
+          const chatStream = createChatStream({
+            messages: modelMessages,
             systemPrompt,
+            abortController,
           })
 
-          return toServerSentEventsResponse(stream, { abortController })
+          return toServerSentEventsResponse(chatStream, { abortController })
         } catch (err) {
-          console.error('[chat error]', err)
-          const msg =
-            err instanceof Error
-              ? `Chat unavailable: ${err.message}. Please check your API key and provider configuration.`
-              : 'Chat unavailable due to an internal error.'
-          return toServerSentEventsResponse(makeStream(msg))
+          const message = err instanceof Error ? err.message : String(err)
+          return toServerSentEventsResponse(staticChatStream(`Error: ${message}`), {
+            abortController,
+          })
         }
       },
     },

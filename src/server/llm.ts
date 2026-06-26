@@ -25,10 +25,12 @@ export function createChatStream({
   messages,
   systemPrompt,
   provider,
+  abortController,
 }: {
   messages: Array<{ role: string; content: string }>
   systemPrompt?: string
   provider?: Provider
+  abortController?: AbortController
 }) {
   const adapter = getAdapter(provider)
   const systemPrompts = systemPrompt ? [systemPrompt] : []
@@ -37,6 +39,7 @@ export function createChatStream({
     adapter,
     messages: messages as Array<{ role: 'user' | 'assistant'; content: string }>,
     systemPrompts,
+    abortController,
     modelOptions: { temperature: 0.7 },
   })
 }

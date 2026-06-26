@@ -9,10 +9,19 @@ export function Chatbot({ name }: { name: string }) {
 
   const { messages, sendMessage, isLoading, stop, error } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
-    onFinish: () => {
+    onFinish: (msg) => {
+      console.log('[chat] onFinish:', msg)
       setInput('')
     },
+    onError: (err) => {
+      console.error('[chat] onError:', err)
+    },
+    onChunk: (chunk) => {
+      console.log('[chat] onChunk:', chunk.type)
+    },
   })
+
+  console.log('[chat] render messages:', messages.length, 'isLoading:', isLoading, 'error:', error)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
