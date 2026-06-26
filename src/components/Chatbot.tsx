@@ -85,8 +85,23 @@ export function Chatbot({ name }: { name: string }) {
         ))}
 
         {error && (
-          <div className="text-center text-sm text-red-500 py-2">
-            Error: {error.message}
+          <div className="mx-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-600 dark:text-red-400">
+            <div className="flex items-start gap-2">
+              <span className="shrink-0 mt-0.5">⚠️</span>
+              <div className="flex-1">
+                <p className="font-medium">Connection Error</p>
+                <p className="mt-0.5 text-red-500/80 dark:text-red-400/80">
+                  {error.message.includes('401') || error.message.includes('unauthorized')
+                    ? 'The chat service is not configured yet. Please check your API key.'
+                    : error.message.includes('Failed to fetch')
+                      ? 'Could not reach the chat server. Is the dev server running?'
+                      : error.message}
+                </p>
+                <p className="mt-1.5 text-xs text-red-400/60">
+                  Try sending your message again when the issue is resolved.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
