@@ -34,12 +34,32 @@ export const Route = createFileRoute('/api/chat')({
 
           const abortController = new AbortController()
           const systemPrompt = buildChatSystemPrompt()
-          const stream = createChatStream({
+          const rawStream = createChatStream({
             messages,
             systemPrompt,
           })
 
-          return toServerSentEventsResponse(stream, { abortController })
+          const safeStream = (async function* () {
+            try {
+              for await (const chunk of rawStream) {
+                yield chunk
+              }
+            } catch (err) {
+              console.error('[chat stream error]', err)
+              const msg =
+                err instanceof Error
+                  ? `Chat unavailable: ${err.message}. Please check your API key and provider configuration.`
+                  : 'Chat unavailable due to an internal error.'
+              const id = crypto.randomUUID()
+              yield { type: 'run_started', threadId: id, runId: id } as StreamChunk
+              yield { type: 'text_message_start', messageId: id } as StreamChunk
+              yield { type: 'text_message_content', messageId: id, delta: msg } as StreamChunk
+              yield { type: 'text_message_end', messageId: id } as StreamChunk
+              yield { type: 'run_finished', threadId: id, runId: id } as StreamChunk
+            }
+          })()
+
+          return toServerSentEventsResponse(safeStream, { abortController })
         } catch (err) {
           console.error('[chat error]', err)
           const msg =
