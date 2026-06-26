@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Resume } from '../components/resume/Resume'
-import { enhanceResume } from '../server/enhance-resume'
+import { parseResumeFromMd } from '../lib/resume-parser'
 
 export const Route = createFileRoute('/')({
   component: Home,
-  loader: () => enhanceResume(),
+  loader: () => parseResumeFromMd(),
   pendingComponent: () => (
     <div className="max-w-3xl mx-auto py-20 text-center text-[var(--color-text)]/40">
       <div className="animate-pulse space-y-4">

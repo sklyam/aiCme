@@ -15,11 +15,20 @@ interface CacheEntry {
 function getMaxContentMtime(): number {
   if (!fs.existsSync(contentDir)) return 0
 
-  const files = fs.readdirSync(contentDir).filter((f) => f.endsWith('.md'))
-  if (files.length === 0) return 0
+  const allFiles = fs.readdirSync(contentDir)
+  const exampleFiles = allFiles.filter((f) => f.endsWith('.example.md'))
+  const realFiles = allFiles.filter((f) => f.endsWith('.md') && !f.endsWith('.example.md'))
+
+  const exampleBasenames = new Set(exampleFiles.map((f) => f.replace('.example.md', '')))
+  const trackedFiles = [
+    ...exampleFiles,
+    ...realFiles.filter((f) => !exampleBasenames.has(f.replace('.md', ''))),
+  ]
+
+  if (trackedFiles.length === 0) return 0
 
   let maxMtime = 0
-  for (const file of files) {
+  for (const file of trackedFiles) {
     const stat = fs.statSync(path.join(contentDir, file))
     if (stat.mtimeMs > maxMtime) {
       maxMtime = stat.mtimeMs
