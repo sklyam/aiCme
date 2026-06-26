@@ -146,8 +146,11 @@ function parseSectionFromContent(heading: string, rest: string) {
 export function parseResumeFromMd(): EnhancedResume {
   const files = getContentForResume()
 
+  const sectionSlugs = new Set(['education', 'experience', 'projects'])
   const profileFile = files.find((f) => f.slug === 'profile')
-  const sectionFiles = files.filter((f) => f.slug !== 'profile' && f.slug !== 'prompt')
+  const sectionFiles = files.filter(
+    (f) => f.slug !== 'profile' && f.slug !== 'prompt' && !sectionSlugs.has(f.slug),
+  )
 
   const fm = profileFile?.frontmatter ?? {}
 
