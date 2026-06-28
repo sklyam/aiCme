@@ -135,6 +135,37 @@ Important rule of thumb:
 - If content must appear in the resume UI, keep it parser-friendly.
 - If content is only for chatbot context, write normal Markdown freely.
 
+## Generating Project And Experience Notes
+
+aiCme includes a lightweight project-analysis helper for turning codebases into conservative Markdown notes:
+
+```txt
+tools/project-analysis/
+```
+
+This helper is useful when you want to scan one repository, many small projects, or a folder of repositories and produce source material for:
+
+```txt
+content/projects.md
+content/projects/my-project.md
+content/experience-notes.md
+```
+
+The project-analysis prompt is intentionally evidence-based:
+
+- it reads code, README files, package metadata, configs, tests, and docs as evidence
+- it outputs Markdown sections such as `Summary`, `Features`, `Technical Details`, `Evidence`, and `Unknowns`
+- it avoids inventing role, impact, scale, dates, ownership, or production usage unless the repository clearly supports it
+
+Recommended workflow:
+
+1. Use `tools/project-analysis/codebase-to-project-profile.md` as the prompt or instruction source when asking an AI agent to inspect a codebase.
+2. Save the generated output under `content/projects/*.md` for chatbot knowledge.
+3. If you want a project to appear on the resume page, copy or condense the relevant parts into root-level `content/projects.md`.
+4. Check the expected content shape in `docs/content-format-recommendations.md`.
+
+This keeps raw project analysis flexible while letting the resume UI stay clean and controlled.
+
 ## Chatbot Behavior
 
 The chatbot is profile-bound. It should answer questions about:

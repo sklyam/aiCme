@@ -53,6 +53,14 @@ Use this for hand-written projects or AI output from `prompts/codebase-to-projec
 
 This is a recommended authoring shape for humans and AI, not a strict parser contract. For larger sites, prefer one file per project under `content/projects/` so the chatbot can use the details without forcing every project into the resume UI.
 
+For codebase-derived project notes, use the helper instructions in:
+
+```txt
+tools/project-analysis/
+```
+
+That helper is designed to produce evidence-based source material for `content/projects.md` or `content/projects/*.md`.
+
 ```md
 ## Project Name
 
