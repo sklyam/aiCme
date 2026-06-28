@@ -5,6 +5,13 @@ export function buildChatSystemPrompt(): string {
   const name = getProfileName()
   const customPrompt = getCustomPrompt()
 
+  if (!profileContent.trim()) {
+    const emptyPrompt = `You are an AI assistant. No user profile data is available yet. If the user asks anything, let them know that no profile data has been set up yet.`
+    return customPrompt
+      ? `${emptyPrompt}\n\nAdditional instructions:\n${customPrompt}`
+      : emptyPrompt
+  }
+
   const basePrompt = `You are an AI assistant for ${name}. Answer questions about their background, experience, skills, and projects using ONLY the information below.
 
 If asked about something not covered in their profile, respond with: "I can only answer questions about ${name}'s profile."

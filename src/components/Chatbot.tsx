@@ -72,7 +72,13 @@ export function Chatbot({ name }: { name: string }) {
             >
               {message.parts.map((part, i) => {
                 if (part.type === 'text') {
-                  return <p key={i}>{part.content}</p>
+                  const isStreaming = isLoading && message.role === 'assistant' && i === message.parts.length - 1
+                  return (
+                    <p key={i}>
+                      {part.content}
+                      {isStreaming && <span className="animate-pulse">▊</span>}
+                    </p>
+                  )
                 }
                 if (part.type === 'thinking') {
                   return (
