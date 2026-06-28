@@ -1,209 +1,119 @@
-# aiCme — Project Plan
+# aiCme Project Plan
 
 ## Overview
 
-An open-source AI Resume / CV personal website framework.
+aiCme is an open-source AI resume / CV personal website framework.
 
-Users provide personal info as **Markdown files**. The system:
-1. **Parses** `.md` files → resume page (pure parser, no LLM)
-2. **Chatbot** answers questions about the user (uses LLM)
+Users provide personal profile data as Markdown files. The system:
 
-Chatbot has **strict topic scope**: only About Me, Projects, Skills, Experience. Out-of-scope: `"I can only answer questions about {name}'s profile."`
+1. Parses display-friendly Markdown into a resume page without using an LLM.
+2. Uses real Markdown content as grounded context for a profile chatbot.
 
----
-
-## Tech Stack
-
-| Layer | Choice |
-|---|---|
-| Framework | **TanStack Start** (React, SSR, file-based routing) |
-| Styling | **Tailwind CSS v4** |
-| AI SDK | **TanStack AI** (`@tanstack/ai`) — `chat()`, multi-provider adapters |
-| Language | **TypeScript** |
-| Markdown | **gray-matter** (frontmatter parsing) |
-| Package Manager | **pnpm** |
-| Deployment | Vercel (serverless) → future Docker |
+The content model is intentionally low-restriction. Only content that must appear in the resume UI needs to follow the parser-friendly shape; other Markdown can remain flexible notes, project writeups, or AI-generated drafts.
 
 ---
 
-## Directory Structure
+## Content Layers
 
-```
-aiCme/
-├── src/
-│   ├── routes/
-│   │   ├── __root.tsx              # Root layout (nav, theme, HeadContent)
-│   │   ├── index.tsx               # Resume page (loader: parseResumeFromMd)
-│   │   ├── chatbot.tsx             # Chatbot page (loader: fetchProfileName)
-│   │   └── api.chat.ts             # POST /api/chat (SSE streaming via TanStack AI)
-│   ├── components/
-│   │   ├── resume/
-│   │   │   ├── Resume.tsx          # Main resume shell
-│   │   │   ├── ResumeHeader.tsx    # Name, title, contact bar
-│   │   │   ├── BioSection.tsx      # About section
-│   │   │   └── SectionsList.tsx    # Generic sections renderer
-│   │   ├── Chatbot.tsx             # Chat UI with useChat
-│   │   ├── ThemeToggle.tsx         # Dark/light toggle
-│   │   └── ThemeProvider.tsx       # CSS variable theme context
-│   ├── server/
-│   │   ├── llm.ts                  # Multi-provider LLM client (chat())
-│   │   ├── prompts.ts              # Prompt templates (scope constraints)
-│   │   ├── enhance-resume.ts       # (deprecated) LLM-enhanced resume — kept for type
-│   │   └── content-api.ts          # Server fns: fetchProfileName, fetchAllContent
-│   ├── lib/
-│   │   ├── content.ts              # Read & parse markdown files (server-only)
-│   │   ├── resume-parser.ts        # Pure parser: .md → EnhancedResume (no LLM)
-│   │   ├── cache.ts                # File-based cache with mtime invalidation
-│   │   └── config.ts               # App config (provider, model, prompt)
-│   ├── router.tsx
-│   ├── routeTree.gen.ts            # Auto-generated
-│   └── styles.css                  # Tailwind + CSS custom properties theme
-├── content/
-│   ├── .gitignore                  # * ignores all, !*.example.md un-ignores templates
-│   ├── profile.example.md          # Frontmatter-driven (name, title, contact)
-│   ├── experience.example.md       # Work history
-│   ├── education.example.md        # Education background
-│   ├── projects.example.md         # Projects
-│   ├── skills.example.md           # Skills
-│   └── prompt.example.md           # Optional custom chatbot system prompt
-├── docs/
-│   ├── plan.md                     # This file
-│   └── content-format-recommendations.md
-├── tools/
-│   └── project-analysis/           # Prompts + skills for generating project content
-├── work/                           # Local scratch files (gitignored)
-├── public/
-├── .gitignore
-├── AGENTS.md
-├── vite.config.ts
-├── tsconfig.json
-├── tsr.config.json
-├── package.json
-└── pnpm-lock.yaml
-```
+### Resume Display Content
 
----
+- Root-level `content/*.md` and `content/*.example.md` files are used by the resume page.
+- `.example.md` files are committed templates and can power demo mode.
+- Real `.md` files are gitignored by default so personal data is not committed accidentally.
+- The parser contract applies only to content that the current UI is expected to display.
 
-## Content Layer
+### AI Knowledge Content
 
-- All `.md` files under `content/` are auto-discovered recursively
-- `.example.md` files are reference templates (committed); code skips them
-- Real `.md` files are gitignored — users create by copying `.example` and removing suffix
-- `content/llm_profile_pack/` is a gitignored subdirectory for the user's personal LLM analysis
-
-**Special files:**
-- `profile.md` — frontmatter-driven (`name`, `title`, `email`, `location`, `social`); body is bio
-- `prompt.md` — optional custom system prompt for chatbot (overrides config default)
-
-**Generic files:** section type derived from file slug or `## heading` text.
+- The chatbot reads real `.md` files recursively under `content/`.
+- Nested files such as `content/projects/my-project.md` can provide extra context without needing to match the resume parser.
+- `prompt.md` can provide optional additional chatbot instructions.
+- `.example.md` files are not used as chatbot knowledge, avoiding accidental demo answers in production.
 
 ---
 
 ## Data Flow
 
 ### Resume Page
-1. Server reads all `content/*.md` files (excluding `.example.md`)
-2. Parses with `gray-matter` into `{slug, frontmatter, body}`
-3. Pure parser (`resume-parser.ts`) converts `.md` → `EnhancedResume` JSON:
-   - Profile frontmatter → name, title, contact
-   - Profile body → bio
-   - `## headings` → sections; `### items` → subsection items
-   - Bullet lists → highlights; `**Stack:**` → tags; `**Links:**` → links
-4. Lightweight cache with mtime invalidation (optional, parser is fast)
-5. Server passes JSON to React components for rendering
+
+1. Read root-level display Markdown from `content/`.
+2. Prefer committed `.example.md` templates as demo fallback, plus real files that are not shadowed by a matching example.
+3. Parse with `gray-matter` into `{ slug, frontmatter, body, source }`.
+4. Convert parser-friendly Markdown into `EnhancedResume`.
+5. Render through the resume UI components.
 
 ### Chatbot
-1. User types a question
-2. **Topic Gate** (keyword rules): check if question is about allowed topics
-3. If out of scope → SSE stream with `"I can only answer questions about {name}'s profile."`
-4. If in scope → build system prompt with content + scope constraints
-5. Call LLM via TanStack AI `chat()` — multi-provider (OpenAI, Anthropic, Gemini, Ollama)
-6. Stream AG-UI events via `toServerSentEventsResponse()`
+
+1. User asks a question in English, Chinese, or mixed language.
+2. A soft pre-LLM gate rejects only clearly unrelated requests.
+3. Profile-related or ambiguous questions are sent to TanStack AI `chat()`.
+4. The system prompt requires answers to be grounded only in real profile content.
+5. Responses stream through `toServerSentEventsResponse()`.
 
 ---
 
-## Topic Scope Enforcement
+## Topic Scope
 
-**Two layers:**
+The chatbot uses two layers:
 
-### Layer 1: Topic Gate (pre-LLM keyword match)
-Keywords: `you`, `your`, `work`, `project`, `skill`, `experience`, `background`, `resume`, `about`, `built`, `tech`, `company`, `role`, `education`, `school`, `degree`
+- **Soft gate**: refuse obvious non-profile requests, such as weather, stock prices, news, or code-generation requests that do not mention the profile.
+- **System prompt**: for all allowed questions, answer only from the profile context; if the profile does not contain the requested information, respond with `"I can only answer questions about {name}'s profile."`
 
-### Layer 2: System Prompt (LLM-level constraint)
+This avoids a strict keyword gate because user questions may be Chinese, English, mixed language, or phrased indirectly.
+
+---
+
+## Content Checks
+
+Before publishing, run:
+
+```bash
+pnpm check:content
 ```
-You are an AI assistant for {name}. You MUST ONLY answer questions about:
-1. About Me (bio, background, contact)
-2. Projects (work, open-source, side projects)
-3. Skills (technologies, tools, expertise)
-4. Experience (work history, roles, achievements)
 
-For ANY question outside these topics, respond with:
-"I can only answer questions about {name}'s profile."
+The check reports:
 
-Do NOT answer questions about general knowledge, other people,
-technical advice, code generation, or any topic outside the scope above.
+- demo mode when only example content exists
+- missing real `profile.md`
+- resume display still using example content while real content exists
+
+For CI or stricter release checks:
+
+```bash
+pnpm check:content:strict
 ```
 
 ---
 
-## Theme System
+## Tech Stack
 
-CSS custom properties:
-
-```css
-:root {
-  --color-primary: #6366f1;
-  --color-accent: #06b6d4;
-  --color-surface: #ffffff;
-  --color-text: #1e293b;
-}
-.dark {
-  --color-primary: #818cf8;
-  --color-accent: #22d3ee;
-  --color-surface: #0f172a;
-  --color-text: #f1f5f9;
-}
-```
+| Layer | Choice |
+| --- | --- |
+| Framework | TanStack Start |
+| Routing | TanStack Router |
+| AI SDK | TanStack AI |
+| UI | React + TypeScript |
+| Styling | Tailwind CSS v4 |
+| Markdown | gray-matter |
+| Package Manager | pnpm |
 
 ---
 
 ## Key Decisions
 
 | Decision | Rationale |
-|---|---|
-| No content management UI | Raw markdown never client-exposed; Git is source of truth |
-| `.example.md` committed, `.md` gitignored | Personal data never in git history |
-| Resume: pure parser, no LLM | Faster, cheaper, deterministic; LLM not needed for formatting |
-| Chatbot: TanStack AI `chat()` | Unified multi-provider API with built-in SSE streaming |
-| Out-of-scope: SSE stream | Matches client `fetchServerSentEvents` format; fixes `StreamTruncatedError` |
-| Recursive content discovery | Supports subdirectory profiles (e.g. `llm_profile_pack/`) |
-| `work/` directory gitignored | Local scratch files for AI tooling, never committed |
+| --- | --- |
+| Markdown-first content | Easy for users and AI tools to edit |
+| No CMS for v1 | Git and local files stay the source of truth |
+| Resume parser is deterministic | Display rendering should be fast and predictable |
+| Flexible AI knowledge files | Users can add rich project notes without UI schema pressure |
+| Soft topic gate | Prevents obvious misuse without blocking valid multilingual questions |
+| Example fallback stays visible | Demo content is useful, but content checks warn before production |
 
 ---
 
-## Implementation Phases
+## Future Extensions
 
-| # | Phase | Status |
-|---|---|---|
-| 1 | **Scaffold** — TanStack Start, Tailwind, TypeScript, AI add-on | Done |
-| 2 | **Content Layer** — `lib/content.ts`, `lib/config.ts`, sample `.md` | Done |
-| 3 | **Resume Page** — Components, `server/enhance-resume.ts` → parser, route | Done |
-| 4 | **LLM Integration** — `server/llm.ts`, `server/prompts.ts` | Done |
-| 5 | **Chatbot** — `Chatbot.tsx`, `api.chat.ts`, topic gate | Done |
-| 6 | **Polish** — Theme toggle, responsive, error states, SEO | Done |
-| 7 | **Content Restructure** — `.example.md` templates, `.gitignore`, recursive scan | Done |
-| 8 | **Resume Parser** — Pure `.md` → `EnhancedResume` without LLM | Done |
-| | **Deployment** — Vercel / Docker | Pending |
-
----
-
-## Key Dependencies
-
-| Package | Purpose |
-|---|---|
-| `@tanstack/start` + `@tanstack/react-router` | Framework |
-| `react` + `react-dom` | UI |
-| `tailwindcss` + `@tailwindcss/vite` | Styling |
-| `@tanstack/ai` + provider adapters | LLM (OpenAI, Anthropic, Gemini, Ollama) |
-| `gray-matter` | Markdown frontmatter parsing |
-| `zod` | Runtime config validation |
+- Add `visibleSections` / `hiddenSections` or `display` frontmatter options.
+- Add UI for selecting which content appears on the resume.
+- Add stricter schema validation only for sections that need structured UI rendering.
+- Add richer content diagnostics in the app shell or build output.
