@@ -16,10 +16,16 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'light'
-    return (localStorage.getItem('theme') as Theme) ?? 'light'
-  })
+  const [theme, setTheme] = useState<Theme>('light')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('theme') as Theme | null
+    if (saved === 'dark' || saved === 'light') {
+      setTheme(saved)
+    } else if (window.matchMedia('(prefers-color-scheme:dark)').matches) {
+      setTheme('dark')
+    }
+  }, [])
 
   useEffect(() => {
     const root = document.documentElement

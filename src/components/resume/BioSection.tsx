@@ -2,11 +2,11 @@ export function BioSection({ bio }: { bio: string }) {
   if (!bio) return null
 
   return (
-    <section className="mb-8">
-      <h2 className="text-lg font-semibold text-[var(--color-text)] mb-3 uppercase tracking-wider text-sm text-[var(--color-primary)]">
+    <section className="mb-10">
+      <h2 className="text-xs font-medium text-[var(--color-muted)] uppercase tracking-widest mb-4">
         About
       </h2>
-      <div className="text-[var(--color-text)]/80 leading-relaxed whitespace-pre-line">
+      <div className="text-[var(--color-text)]/70 leading-relaxed whitespace-pre-line">
         {bio}
       </div>
     </section>

@@ -1,19 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --color-primary: #6366f1;
-  --color-accent: #06b6d4;
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-text: #1e293b;
+  --color-primary: #4A7CF7;
+  --color-bg: #ffffff;
+  --color-surface: #f9f8f6;
+  --color-text: #0a0a0a;
+  --color-muted: #8a8a8a;
+  --color-hairline: #d5d9e2;
 }
 
 .dark {
-  --color-primary: #818cf8;
-  --color-accent: #22d3ee;
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-text: #f1f5f9;
+  --color-primary: #4A7CF7;
+  --color-bg: #0a0a0a;
+  --color-surface: #191919;
+  --color-text: #ffffff;
+  --color-muted: #7d8187;
+  --color-hairline: #212327;
 }
 
 * {
@@ -30,9 +32,11 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
   transition: background-color 0.2s, color 0.2s;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @utility scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-primary)/20 transparent;
+  scrollbar-color: var(--color-muted)/30 transparent;
 }

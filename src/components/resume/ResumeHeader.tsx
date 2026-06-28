@@ -9,36 +9,36 @@ export function ResumeHeader({
   const { name, title, headline, contact } = resume
 
   return (
-    <header className="mb-8">
+    <header className="mb-12">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight text-[var(--color-text)]">
+          <h1 className="text-5xl font-light tracking-tight text-[var(--color-text)] leading-none">
             {name}
           </h1>
-          <p className="mt-1 text-xl text-[var(--color-primary)] font-medium">
+          <p className="mt-3 text-lg text-[var(--color-muted)] font-light">
             {title}
           </p>
           {headline && (
-            <p className="mt-2 text-lg text-[var(--color-text)]/70 italic">
+            <p className="mt-3 text-base text-[var(--color-muted)] leading-relaxed max-w-2xl">
               {headline}
             </p>
           )}
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-4 text-sm text-[var(--color-text)]/60">
+      <div className="mt-6 flex flex-wrap gap-2 text-sm text-[var(--color-muted)]">
         {contact.location && (
-          <span className="flex items-center gap-1">
-            <MapPin size={14} />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[var(--color-hairline)]">
+            <MapPin size={12} />
             {contact.location}
           </span>
         )}
         {contact.email && (
           <a
             href={`mailto:${contact.email}`}
-            className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[var(--color-hairline)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
           >
-            <Mail size={14} />
+            <Mail size={12} />
             {contact.email}
           </a>
         )}
@@ -47,9 +47,9 @@ export function ResumeHeader({
             href={contact.social.website}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[var(--color-hairline)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
           >
-            <Globe size={14} />
+            <Globe size={12} />
             Website
           </a>
         )}
@@ -58,9 +58,9 @@ export function ResumeHeader({
             href={`https://github.com/${contact.social.github}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[var(--color-hairline)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
           >
-            <Github size={14} />
+            <Github size={12} />
             {contact.social.github}
           </a>
         )}
@@ -69,9 +69,9 @@ export function ResumeHeader({
             href={`https://linkedin.com/in/${contact.social.linkedin}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[var(--color-hairline)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
           >
-            <Linkedin size={14} />
+            <Linkedin size={12} />
             {contact.social.linkedin}
           </a>
         )}
