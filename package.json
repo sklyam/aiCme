@@ -8,6 +8,8 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
+    "check:content": "node tools/check-content.mjs",
+    "check:content:strict": "node tools/check-content.mjs --strict",
     "build": "vite build",
     "preview": "vite preview"
   },
