@@ -1,3 +1,4 @@
+<!-- opencode agent instructions. Other AI tools can safely ignore this file. -->
 <!-- intent-skills:start -->
 # TanStack Intent - before editing files, run the matching guidance command.
 tanstackIntent:
