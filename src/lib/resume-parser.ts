@@ -1,5 +1,5 @@
 import { getContentForResume } from './content'
-import type { EnhancedResume } from '../server/enhance-resume'
+import type { EnhancedResume } from '../types'
 
 function splitByH2(body: string): Array<{ heading: string; rest: string }> {
   const parts = body.split(/(?=^## )/m)

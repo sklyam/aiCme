@@ -1,5 +1,5 @@
 import { MapPin, Mail, Globe, Github, Linkedin } from 'lucide-react'
-import type { EnhancedResume } from '../../server/enhance-resume'
+import type { EnhancedResume } from '../../types'
 
 export function ResumeHeader({
   resume,

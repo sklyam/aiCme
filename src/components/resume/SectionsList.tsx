@@ -1,4 +1,4 @@
-import type { EnhancedResume } from '../../server/enhance-resume'
+import type { EnhancedResume } from '../../types'
 
 const sectionIcons: Record<string, string> = {
   experience: '💼',

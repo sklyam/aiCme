@@ -73,48 +73,6 @@ export function getAllContentAsString(): string {
     .join('\n\n')
 }
 
-export function getAllowedTopics(): string[] {
-  return ['About Me', 'Projects', 'Skills', 'Experience']
-}
-
-const allowedKeywords = [
-  'you',
-  'your',
-  'work',
-  'project',
-  'skill',
-  'experience',
-  'background',
-  'resume',
-  'about',
-  'built',
-  'tech',
-  'company',
-  'role',
-  'education',
-  'school',
-  'degree',
-  'bio',
-  'career',
-  'job',
-  'team',
-  'technology',
-  'stack',
-  'tool',
-  'framework',
-  'language',
-  'hobby',
-  'interest',
-  'goal',
-  'achievement',
-  'accomplishment',
-]
-
-export function isQuestionInScope(question: string): boolean {
-  const lower = question.toLowerCase()
-  return allowedKeywords.some((keyword) => lower.includes(keyword))
-}
-
 export function getProfileName(): string {
   const profile = getProfile()
   if (profile?.frontmatter?.name) {

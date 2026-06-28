@@ -1,4 +1,4 @@
-import type { EnhancedResume } from '../../server/enhance-resume'
+import type { EnhancedResume } from '../../types'
 import { ResumeHeader } from './ResumeHeader'
 import { BioSection } from './BioSection'
 import { SectionsList } from './SectionsList'
