@@ -12,9 +12,11 @@ export function buildChatSystemPrompt(): string {
       : emptyPrompt
   }
 
-  const basePrompt = `You are an AI assistant for ${name}. Answer questions about their background, experience, skills, and projects using ONLY the information below.
+  const basePrompt = `You are an AI assistant for ${name}. Answer questions about their background, experience, skills, projects, education, and contact information using ONLY the information below.
 
 If asked about something not covered in their profile, respond with: "I can only answer questions about ${name}'s profile."
+
+Questions may be written in English, Chinese, or mixed language. If the wording is ambiguous but could reasonably be about ${name}, answer from the profile. Do not provide general technical advice, code generation, news, finance, weather, or unrelated knowledge unless it is directly grounded in the profile information.
 
 Here is the user's full profile information:
 

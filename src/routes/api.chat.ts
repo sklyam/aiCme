@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { EventType, toServerSentEventsResponse, type StreamChunk } from '@tanstack/ai'
 import { createChatStream } from '../server/llm'
 import { buildChatSystemPrompt } from '../server/prompts'
+import { getProfileName } from '../lib/content'
+import { getProfileOnlyReply, isClearlyOffTopicProfileQuestion } from '../server/topic-gate'
 
 async function* staticChatStream(text: string): AsyncIterable<StreamChunk> {
   const runId = crypto.randomUUID()
@@ -47,6 +49,13 @@ export const Route = createFileRoute('/api/chat')({
 
           if (modelMessages.length === 0 || !modelMessages[modelMessages.length - 1]?.content?.trim()) {
             return toServerSentEventsResponse(staticChatStream('Please ask a question about my profile.'), {
+              abortController,
+            })
+          }
+
+          const latestQuestion = modelMessages[modelMessages.length - 1].content
+          if (isClearlyOffTopicProfileQuestion(latestQuestion)) {
+            return toServerSentEventsResponse(staticChatStream(getProfileOnlyReply(getProfileName())), {
               abortController,
             })
           }
