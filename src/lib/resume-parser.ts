@@ -126,6 +126,8 @@ function parseSectionFromContent(heading: string, rest: string) {
 
   const tagList = tags.length > 0 ? tags : rest.split(',').map((s) => s.trim()).filter(Boolean)
 
+  const isFlatList = tagList.length > 1 && highlights.length === 0 && tags.length === 0
+
   return {
     type: heading.toLowerCase().replace(/\s+/g, '-'),
     title: heading,
@@ -134,7 +136,7 @@ function parseSectionFromContent(heading: string, rest: string) {
         title: heading,
         subtitle: '',
         date: '',
-        description,
+        description: isFlatList ? '' : description,
         highlights: [],
         tags: tagList,
         links,
