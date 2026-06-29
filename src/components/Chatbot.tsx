@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChat, fetchServerSentEvents } from '@tanstack/ai-react'
 import { Send, Square, Bot } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { UIMessage } from '@tanstack/ai-react'
 
 export function Chatbot({ name }: { name: string }) {
@@ -104,10 +106,12 @@ export function Chatbot({ name }: { name: string }) {
                 if (part.type === 'text') {
                   const isStreaming = isLoading && message.role === 'assistant' && i === message.parts.length - 1
                   return (
-                    <p key={i}>
-                      {part.content}
+                    <div key={i} className="prose prose-sm max-w-none text-inherit [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:text-inherit [&_li::marker]:text-[var(--color-muted)] [&_code]:text-xs [&_code]:bg-[var(--color-hairline)]/30 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_pre]:bg-[var(--color-hairline)]/20 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_a]:text-[var(--color-primary)] [&_a]:underline [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_h3]:text-sm [&_h3]:font-medium [&_p]:my-1 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_ul]:my-1 [&_ol]:my-1">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {part.content}
+                      </ReactMarkdown>
                       {isStreaming && <span className="animate-pulse text-[var(--color-primary)]">▊</span>}
-                    </p>
+                    </div>
                   )
                 }
                 if (part.type === 'thinking') {
