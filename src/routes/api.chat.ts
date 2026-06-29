@@ -5,6 +5,29 @@ import { buildChatSystemPrompt } from '../server/prompts'
 import { getProfileName } from '../lib/content'
 import { getProfileOnlyReply, isClearlyOffTopicProfileQuestion } from '../server/topic-gate'
 
+async function* chunkWords(text: string, messageId: string, timestamp: number): AsyncIterable<StreamChunk> {
+  const words = text.split(/(?<=\s)/)
+  if (words.length <= 3) {
+    yield { type: EventType.TEXT_MESSAGE_CONTENT, messageId, delta: text, timestamp }
+    return
+  }
+  for (let i = 0; i < words.length; i += 2) {
+    const group = words.slice(i, i + 2).join('')
+    yield { type: EventType.TEXT_MESSAGE_CONTENT, messageId, delta: group, timestamp }
+    await new Promise(r => setTimeout(r, 12))
+  }
+}
+
+async function* smoothStream(stream: AsyncIterable<StreamChunk>): AsyncIterable<StreamChunk> {
+  for await (const chunk of stream) {
+    if (chunk.type !== EventType.TEXT_MESSAGE_CONTENT || !chunk.delta || chunk.delta.length <= 20) {
+      yield chunk
+      continue
+    }
+    yield* chunkWords(chunk.delta, chunk.messageId, chunk.timestamp)
+  }
+}
+
 async function* staticChatStream(text: string): AsyncIterable<StreamChunk> {
   const runId = crypto.randomUUID()
   const msgId = crypto.randomUUID()
@@ -61,11 +84,11 @@ export const Route = createFileRoute('/api/chat')({
           }
 
           const systemPrompt = buildChatSystemPrompt()
-          const chatStream = createChatStream({
+          const chatStream = smoothStream(createChatStream({
             messages: modelMessages,
             systemPrompt,
             abortController,
-          })
+          }))
 
           return toServerSentEventsResponse(chatStream, { abortController })
         } catch (err) {
